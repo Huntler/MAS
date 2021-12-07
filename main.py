@@ -24,8 +24,9 @@ def get_winners(votings):
     for i in range(len(votings[0])):
         dict[i+1] = 0
     for voting in votings:
+        rev_voting = list(reversed(voting))
         for i in range(len(voting)):
-            dict[voting[i]] += i
+            dict[rev_voting[i]] += i+1
     sorted_winners = sorted(dict.items(), key=lambda x: x[1], reverse=True)
     sorted_winners_list = []
     for i in sorted_winners:
@@ -48,10 +49,6 @@ def overall_happiness(group, result):
     overall_happiness /= len(group)
     return  overall_happiness
 
-
-def get_permutations():
-    return
-
 def single_voter_manipulation(votings):
     preferred_preferences = []
     for voting in range(len(votings)):
@@ -59,6 +56,10 @@ def single_voter_manipulation(votings):
         origin_winners = get_winners(votings)
         origin_happyness = happiness(np.array(origin_winners), np.array(voting))
         all_permutations = list(itertools.permutations(votings[voting]))
+        all_permutations_list = []
+        for i in range(len(all_permutations)):
+            all_permutations_list.append(list(all_permutations[i]))
+        all_permutations = all_permutations_list
         for permutation in range(1, len(all_permutations)):
             votings[voting] = all_permutations[permutation]
             winners = get_winners(votings)

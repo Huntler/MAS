@@ -4,7 +4,6 @@ import numpy as np
 from typing import Set, Dict, List
 from main import *
 
-
 def get_voting_situation(number_voters, number_candidates):
     candidates = number_candidates
     voters = number_voters
@@ -22,20 +21,19 @@ def get_voting_situation(number_voters, number_candidates):
             votings[i].append(votings_template_list[i].pop(random_index))
     return votings
 
-
 def get_winners(votings):
     dict = {}
     for i in range(len(votings[0])):
-        dict[i + 1] = 0
+        dict[i+1] = 0
     for voting in votings:
+        rev_voting = list(reversed(voting))
         for i in range(len(voting)):
-            dict[voting[i]] += i
+            dict[rev_voting[i]] += i+1
     sorted_winners = sorted(dict.items(), key=lambda x: x[1], reverse=True)
     sorted_winners_list = []
     for i in sorted_winners:
         sorted_winners_list.append(i[0])
     return sorted_winners_list
-
 
 def happyiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     m = len(i)
@@ -44,7 +42,6 @@ def happyiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     d = np.abs(j - i)
     h_hat = np.sum(d * (s1 + s2)) / m
     return np.exp(-h_hat)
-
 
 def single_voter_manipulation(votings):
     preferred_preferences = []
@@ -63,10 +60,8 @@ def single_voter_manipulation(votings):
         votings[voting] = origin_preference
     return preferred_preferences
 
-
 def get_similar_voters():
     raise NotImplementedError("")
-
 
 def get_voter_compatibility(voter_a_preferences, voter_b_preferences):
     differences = 0
@@ -84,7 +79,6 @@ def get_voter_compatibility(voter_a_preferences, voter_b_preferences):
     worstcase = len(voter_a_preferences) * (len(voter_a_preferences) + 1) / 2
     return differences / worstcase * 100
 
-
 def get_multiple_voter_compatibility(preferences):
     combinations = set()
     for voter_1 in preferences:
@@ -97,13 +91,11 @@ def get_multiple_voter_compatibility(preferences):
         ret += get_voter_compatibility(voter[0], voter[1])
     ret /= len(combinations)
 
-
 def lengths_sufficient(teams) -> bool:
     for team in teams:
         if len(team) == 5:
             return True
     return False
-
 
 def multiple_voter_manipulations(origin_votings, coalition):
     multiple_voter_manipulations = []
@@ -111,16 +103,21 @@ def multiple_voter_manipulations(origin_votings, coalition):
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
     all_permutations = list(itertools.permutations(origin_votings[0]))
+    all_permutations_list = []
+    for i in range(len(all_permutations)):
+        all_permutations_list.append(list(all_permutations[i]))
+    all_permutations = all_permutations_list
     for permutation in range(len(all_permutations)):
         temp_votings = origin_votings
         for member in coalition:
+            print(member)
             coalition_votings.append(temp_votings[member])
             coalition_happiness_i.append(happiness(np.array(winners), np.array(temp_votings[member])))
             temp_votings[member] = all_permutations[permutation]
         temp_winners = get_winners(temp_votings)
         all_happier = 1
         for member in range(len(coalition)):
-            temp_happiness = happiness(temp_winners, coalition_votings[member])
+            temp_happiness = happiness(np.array(temp_winners), np.array(coalition_votings[member]))
             if temp_happiness <= coalition_happiness_i[member]:
                 all_happier = 0
                 break
@@ -138,9 +135,7 @@ def create_groups(votings, threshold: int):
                 friendship_value = get_voter_compatibility(voting, friend)
                 if friendship_value <= threshold:
                     teams.append([[i, j], multiple_voter_manipulations(votings, [i, j])])
-
     voting_groups += teams
-
     while not lengths_sufficient(teams):
         new_teams = list()
         for team in teams:
@@ -153,9 +148,7 @@ def create_groups(votings, threshold: int):
                         new_teams.append([team_idxs + [j], multiple_voter_manipulations(votings, [team_idxs + [j]])])
         voting_groups += new_teams
         teams = new_teams
-
     return voting_groups
-
 
 def get_manipulation_probability(all_happinesses_manipulations):
     probs = []
@@ -164,13 +157,12 @@ def get_manipulation_probability(all_happinesses_manipulations):
         probs.append((manipulation, happiness / total))
     return probs
 
-
 def get_coalition_probablity(origin_votings, coalitions):
     probs = []
     for coalition in coalitions:
         # Dear Wiebke, please: return coalitions = [ coalition1, coalition2, coalition3 ] where coalition [ [ members ], [manipulations] ]
         all_happinesses_manipulations = []
-        for manipulation in coalition[1:]:
+        for manipulation in coalition[1]:
             temp_votings = origin_votings
             for member_index in coalition[0]:
                 temp_votings[member_index] = manipulation
@@ -184,7 +176,6 @@ def get_coalition_probablity(origin_votings, coalitions):
 
 def counter_voting(origin_votings, coalitions, i, j):
     colation_probs = get_coalition_probablity(origin_votings, coalitions)
-
 
 if __name__ == '__main__':
     voters = 100
