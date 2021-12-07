@@ -43,6 +43,14 @@ def happyiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     h_hat = np.sum(d * (s1 + s2)) / m
     return np.exp(-h_hat)
 
+def overall_happiness(origin_votings, group, result):
+    overall_happiness = 0
+    for member in group:
+        member_happiness = happiness(np.array(result), np.array(origin_votings[member]))
+        overall_happiness += member_happiness
+    overall_happiness /= len(group)
+    return  overall_happiness
+
 def single_voter_manipulation(votings):
     preferred_preferences = []
     all_permutations = list(itertools.permutations(votings[0]))
@@ -105,7 +113,6 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
     for permutation in range(len(all_permutations)):
         temp_votings = origin_votings
         for member in coalition:
-           # print(member)
             coalition_votings.append(temp_votings[member])
             coalition_happiness_i.append(happiness(np.array(winners), np.array(temp_votings[member])))
             temp_votings[member] = all_permutations[permutation]
@@ -163,7 +170,7 @@ def get_coalition_probablity(origin_votings, coalitions):
             for member_index in coalition[0]:
                 temp_votings[member_index] = manipulation
             temp_winners = get_winners(temp_votings)
-            temp_overall_happiness = overall_happiness(coalition[0], temp_winners)
+            temp_overall_happiness = overall_happiness(origin_votings, coalition[0], temp_winners)
             manipulation_obj = (manipulation, temp_overall_happiness)
             all_happinesses_manipulations.append(manipulation_obj)
         probs_coalition = get_manipulation_probability(all_happinesses_manipulations)
@@ -172,7 +179,7 @@ def get_coalition_probablity(origin_votings, coalitions):
 
 def counter_voting(origin_votings, coalition1, coalition2, permutations):
     origin_winners = get_winners(origin_votings)
-    origin_happiness = overall_happiness(coalition1, origin_winners)
+    origin_happiness = overall_happiness(origin_votings, coalition1, origin_winners)
         
     # generate best tactical voting of opponent
     coalition_probs = get_coalition_probablity(origin_votings, list(coalition2))
@@ -197,14 +204,6 @@ def counter_voting(origin_votings, coalition1, coalition2, permutations):
             all_counter_tactical_votings.append((permutation, temp_happiness))
     
     return max(all_counter_tactical_votings, key=lambda x : x[1])
-
-        
-    
-
-
-    
-    
-    print(coalition_probs)
 
 
 if __name__ == '__main__':
