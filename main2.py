@@ -160,25 +160,25 @@ def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     return np.exp(-h_hat)
 
 
-def s_voter_manipulation(votings, voting_scheme):
+def s_voter_manipulation(votings):
     _votings = votings.copy()
     manipulated_preferences = []
 
     def hf(a, b):
-        _a = [voting_scheme._encode(a)]
-        _b = [voting_scheme._encode(b)]
+        _a = [active_scheme._encode(a)]
+        _b = [active_scheme._encode(b)]
         return happiness(_a, _b)[0]
 
     # temporary save the original outcome to calculate the original happiness for
     # each voter to compare the manipulation with
     for i, voting in enumerate(_votings):
-        o_outcome = voting_scheme.compute_res(_votings)
+        o_outcome = active_scheme.compute_res(_votings)
         o_happiness = hf(o_outcome, voting)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
-            outcome = voting_scheme.compute_res(_votings)
+            outcome = active_scheme.compute_res(_votings)
             h_val = hf(outcome, voting)
 
             # if the h_val is higher (better) than before, then store this manipulation
@@ -437,13 +437,23 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
 
 if __name__ == '__main__':
     global active_scheme
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 12))
     voters = 10
     candidates = 5
+    # create the schemes we want to compare
+    idx = [[0, 0], [0, 1], [1, 0], [1, 1]]
     schemes = [(VotingForOne, "Voting for 1"), (VotingForTwo, "Voting for 2"),
                (AntiPluralityVoting, "Anti-Plural Voting"), (BordaVoting, "Borda Voting")]
     votings, mapping = create_voting_situation(voters, candidates)
-    active_scheme = schemes[3][0](mapping)
-    possible_manipulations = s_voter_manipulation(votings, active_scheme)
+    for i, scheme in enumerate(schemes):
+        active_scheme = scheme[0](mapping)
+        possible_manipulations = s_voter_manipulation(votings)
+
+        p = ax[idx[i][0]][idx[i][1]]
+        visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
+
+    fig.show()
+    input("Showing graphs. Waiting... (press ENTER to continue)")
 
     # risk function
     pmcount = len(possible_manipulations)
