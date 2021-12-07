@@ -97,12 +97,11 @@ def lengths_sufficient(teams) -> bool:
             return True
     return False
 
-def multiple_voter_manipulations(origin_votings, coalition):
+def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
     multiple_voter_manipulations = []
     coalition_votings = []
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
-    all_permutations = list(itertools.permutations(origin_votings[0]))
     for permutation in range(len(all_permutations)):
         temp_votings = origin_votings
         for member in coalition:
@@ -121,6 +120,7 @@ def multiple_voter_manipulations(origin_votings, coalition):
     return multiple_voter_manipulations
 
 def create_groups(votings, threshold: int):
+    all_permutations = list(multiset_permutations(votings[0]))
     # collect all possible likely voter groups:
     voting_groups = list()
     teams = list()
@@ -129,7 +129,7 @@ def create_groups(votings, threshold: int):
             if voting != friend:
                 friendship_value = get_voter_compatibility(voting, friend)
                 if friendship_value <= threshold:
-                    teams.append([[i, j], multiple_voter_manipulations(votings, [i, j])])
+                    teams.append([[i, j], multiple_voter_manipulations(votings, [i, j], all_permutations)])
     voting_groups += teams
     while not lengths_sufficient(teams):
         new_teams = list()
@@ -140,7 +140,7 @@ def create_groups(votings, threshold: int):
                     # to reduce the complexity, the new contributor is only compared to one of the already existing team
                     if get_voter_compatibility(votings[team[0][0]], friend) <= threshold:
                         team_idxs = [i for i in team[0]]
-                        new_teams.append([team_idxs + [j], multiple_voter_manipulations(votings, team_idxs + [j])])
+                        new_teams.append([team_idxs + [j], multiple_voter_manipulations(votings, team_idxs + [j], all_permutations)])
         voting_groups += new_teams
         teams = new_teams
     return voting_groups

@@ -59,7 +59,6 @@ def single_voter_manipulation(votings):
         origin_winners = get_winners(votings)
         origin_happyness = happiness(np.array(origin_winners), np.array(voting))
         all_permutations = list(multiset_permutations(votings[voting]))
-        all_permutations = list(itertools.permutations(votings[voting]))
         for permutation in range(1, len(all_permutations)):
             votings[voting] = all_permutations[permutation]
             winners = get_winners(votings)
