@@ -1,6 +1,9 @@
 import random
 import itertools
 import numpy as np
+from sympy.utilities.iterables import multiset_permutations
+
+
 
 def get_voting_situation(number_voters, number_candidates):
     candidates = number_candidates
@@ -55,11 +58,8 @@ def single_voter_manipulation(votings):
         origin_preference = votings[voting]
         origin_winners = get_winners(votings)
         origin_happyness = happiness(np.array(origin_winners), np.array(voting))
+        all_permutations = list(multiset_permutations(votings[voting]))
         all_permutations = list(itertools.permutations(votings[voting]))
-        all_permutations_list = []
-        for i in range(len(all_permutations)):
-            all_permutations_list.append(list(all_permutations[i]))
-        all_permutations = all_permutations_list
         for permutation in range(1, len(all_permutations)):
             votings[voting] = all_permutations[permutation]
             winners = get_winners(votings)
