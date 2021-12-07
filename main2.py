@@ -103,9 +103,14 @@ def multiple_voter_manipulations(origin_votings, coalition):
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
     all_permutations = list(itertools.permutations(origin_votings[0]))
+    all_permutations_list = []
+    for i in range(len(all_permutations)):
+        all_permutations_list.append(list(all_permutations[i]))
+    all_permutations = all_permutations_list
     for permutation in range(len(all_permutations)):
         temp_votings = origin_votings
         for member in coalition:
+            # print(member)
             coalition_votings.append(temp_votings[member])
             coalition_happiness_i.append(happiness(np.array(winners), np.array(temp_votings[member])))
             temp_votings[member] = all_permutations[permutation]
@@ -140,7 +145,7 @@ def create_groups(votings, threshold: int):
                     # to reduce the complexity, the new contributor is only compared to one of the already existing team
                     if get_voter_compatibility(votings[team[0][0]], friend) <= threshold:
                         team_idxs = [i for i in team[0]]
-                        new_teams.append([team_idxs + [j], multiple_voter_manipulations(votings, team_idxs + [j])])
+                        new_teams.append([team_idxs + [j], multiple_voter_manipulations(votings, [team_idxs + [j]])])
         voting_groups += new_teams
         teams = new_teams
     return voting_groups
@@ -180,7 +185,7 @@ if __name__ == '__main__':
     candidates = 5
     votings = get_voting_situation(voters, candidates)
     possible_manipulations = single_voter_manipulation(votings)
-    print(possible_manipulations)
+    # print(possible_manipulations)
 
     groups = create_groups(votings, 20)
     counter_voting(votings, groups, 0, 1)
