@@ -112,7 +112,7 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
     for permutation in range(len(all_permutations)):
-        temp_votings = origin_votings
+        temp_votings = origin_votings.copy()
         for member in coalition:
             coalition_votings.append(temp_votings[member])
             coalition_happiness_i.append(happiness(np.array(winners), np.array(temp_votings[member])))
