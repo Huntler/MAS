@@ -175,7 +175,10 @@ def get_coalition_probablity(origin_votings, coalitions):
     return probs
 
 def counter_voting(origin_votings, coalitions, i, j):
-    colation_probs = get_coalition_probablity(origin_votings, coalitions)
+    coalitions = [coalitions[i], coalitions[j]]
+    coalition_probs = get_coalition_probablity(origin_votings, coalitions)
+    print(coalition_probs)
+
 
 if __name__ == '__main__':
     voters = 100
@@ -185,6 +188,7 @@ if __name__ == '__main__':
     print(possible_manipulations)
 
     groups = create_groups(votings, 20)
+    counter_voting(votings, groups, 0, 1)
 
     # similar voters -> list of list (different voting preferences among similar voters -> compare happyness to origin preference)
     #                -> for each group manipulation needs to be better than for each voters origin preference
