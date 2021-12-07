@@ -1,3 +1,4 @@
+import math
 import random
 import itertools
 import numpy as np
@@ -259,13 +260,22 @@ if __name__ == '__main__':
     votings = get_voting_situation(voters, candidates)
     possible_manipulations = single_voter_manipulation(votings)
 
+    #risk function
+    pmcount = len(possible_manipulations)
+    risk_single = (pmcount/voters*math.factorial(candidates))*100
+
+
     groups, indices = create_groups_final(votings, 20)
 
     tactical_votings = []
+    singleGroupCount = 0
     for i,group in enumerate(groups):
+        if len(group) ==1:
+            singleGroupCount+=1
         tactical_votings.append([indices[i], multiple_voter_manipulations(votings, indices[i], list(multiset_permutations(votings[0])))])
         #tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
 
+    risk_groups = 100-(singleGroupCount/voters*100)
     # tactical_votings -> [ coalition1, coalition2, coalition3 ] where coalition [ [ members ], [manipulations] ]
 
     # groups = create_groups_onlybiggest(votings, 20)
