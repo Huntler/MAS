@@ -5,6 +5,57 @@ import numpy as np
 from typing import Set, Dict, List
 from main import *
 
+def create_voting_situation(n_voters, n_candidates):
+    # TODO: change mapping to be more dynamic
+    mapping = ["A", "B", "C", "D", "E"]
+    
+    # shuffle the mapping in order to create random 
+    # preferences for each voter
+    votings = []
+    preference = np.asarray(mapping)
+    for voter in range(n_voters):
+        np.random.shuffle(preference)
+        votings.append(preference.copy())
+        
+    return np.asarray(votings), mapping
+
+def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
+    m = len(i)
+    s1 = np.power([s for l in range(m)], np.power(range(m), 2))
+    s2 = np.power([s for l in range(m)], np.power(m - np.array(range(m)), 2))
+    d = np.abs(j - i)
+    h_hat = np.sum(d * (s1 + s2)) / m
+    return np.exp(-h_hat)
+
+def s_voter_manipulation(votings, voting_scheme):
+    manipulated_preferences = []
+    def hf(a, b):
+        _a = [voting_scheme._encode(a)]
+        _b = [voting_scheme._encode(b)]
+        return happiness(_a, _b)[0]
+    
+    # temporary save the original outcome to calculate the original happiness for 
+    # each voter to compare the manipulation with
+    for i, voting in enumerate(votings):
+        o_outcome = voting_scheme.compute_res(votings)
+        o_happiness = hf(o_outcome, voting)
+        
+        for j, manipulation in enumerate(multiset_permutations(voting)):
+            # set the manipulation into the votings array to test it
+            votings[i] = np.asarray(manipulation)
+            outcome = voting_scheme.compute_res(votings)
+            happiness = hf(outcome, voting)
+            
+            # if the happiness is higher (better) than before, then store this manipulation
+            if happiness > o_happiness:
+                ordering = [i, np.asarray(manipulation), happiness]
+                manipulated_preferences.append(ordering)
+        
+        # revert the votings to the original, in order to test other manipulations
+        votings[i] = voting
+    
+    return np.asarray(manipulated_preferences)
+
 def get_voting_situation(number_voters, number_candidates):
     candidates = number_candidates
     voters = number_voters
@@ -36,14 +87,6 @@ def get_winners(votings):
         sorted_winners_list.append(i[0])
     return sorted_winners_list
 
-def happyiness(i: np.array, j: np.array, s: float = 0.9) -> float:
-    m = len(i)
-    s1 = np.power([s for l in range(m)], np.power(range(m), 2))
-    s2 = np.power([s for l in range(m)], np.power(m - np.array(range(m)), 2))
-    d = np.abs(j - i)
-    h_hat = np.sum(d * (s1 + s2)) / m
-    return np.exp(-h_hat)
-
 def overall_happiness(origin_votings, group, result):
     overall_happiness = 0
     for member in group:
@@ -58,11 +101,11 @@ def single_voter_manipulation(votings):
     for voting in range(len(votings)):
         origin_preference = votings[voting]
         origin_winners = get_winners(votings)
-        origin_happyness = happyiness(np.array(origin_winners), np.array(voting))
+        origin_happyness = happiness(np.array(origin_winners), np.array(voting))
         for permutation in range(1, len(all_permutations)):
             votings[voting] = all_permutations[permutation]
             winners = get_winners(votings)
-            happyness_value = happyiness(np.array(winners), np.array(origin_preference))
+            happyness_value = happiness(np.array(winners), np.array(origin_preference))
             if happyness_value > origin_happyness:
                 new_ordering = [voting, all_permutations[permutation], happyness_value]
                 preferred_preferences.append(new_ordering)
@@ -253,6 +296,26 @@ def create_groups_final(votings, threshold):
         new_groups.append(group)
         indices.append(indexgroup)
     return new_groups, indices
+
+def visualize_manipulations(manipulations: np.array, voter: int=-1, title="", p=plt):
+    # if no voter was specified, then draw the graph for every voter 
+    # available in manipulations
+    if voter == -1:
+        for i in range(10):
+            b = manipulations[manipulations[:,0] == i][:,2]
+            p.bar(range(len(b)), b)
+            
+        p.legend([f"Voter {i}" for i in range(10)])
+    
+    else:
+        b = manipulations[manipulations[:,0] == voter][:,2]
+        p.bar(range(len(b)), b)
+        p.legend([f"Voter {voter}"])
+        
+
+    p.title.set_text(title)
+    p.set_xlabel("Permutation")
+    p.set_ylabel("Happiness")
 
 if __name__ == '__main__':
     voters = 10
