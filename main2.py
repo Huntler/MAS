@@ -119,6 +119,28 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
             multiple_voter_manipulations.append(permutation)
     return multiple_voter_manipulations
 
+def create_groups_onlybiggest(votings, threshold: int):
+    all_permutations = list(multiset_permutations(votings[0]))
+    # collect all possible likely voter groups:
+    teams = list()
+    for i, voting in enumerate(votings):
+        for j, friend in enumerate(votings):
+            if voting != friend:
+                teams.append([i, j])
+    while not lengths_sufficient(teams):
+        new_teams = list()
+        for team in teams:
+            for j, friend in enumerate(votings):
+                if j not in team:
+                    team_idxs = [i for i in team]
+                    new_teams.append(team_idxs + [j])
+        teams = new_teams
+    new_teams = list()
+    for team in teams:
+        new_teams.append([team, multiple_voter_manipulations(votings, [i, j], all_permutations)])
+    return new_teams
+
+
 def create_groups(votings, threshold: int):
     all_permutations = list(multiset_permutations(votings[0]))
     # collect all possible likely voter groups:
@@ -172,14 +194,38 @@ def get_coalition_probablity(origin_votings, coalitions):
 def counter_voting(origin_votings, coalitions, i, j):
     colation_probs = get_coalition_probablity(origin_votings, coalitions)
 
+def create_groups_final(votings, threshold):
+    copiedvotings = votings.copy()
+    new_groups = []
+    indices = []
+    while len(votings) != 0:
+        start = votings.pop(0)
+        indexgroup = []
+        indexgroup.append(copiedvotings.index(start))
+        group = []
+        group.append(start)
+        new_votings = []
+        for i,voting in enumerate(votings):
+            if get_voter_compatibility(voting, start) <= threshold:
+                #del voting, votings
+                group.append(voting)
+                indexgroup.append(copiedvotings.index(voting))
+            else:
+                new_votings.append(voting)
+        votings = new_votings
+        new_groups.append(group)
+        indices.append(indexgroup)
+    return new_groups,indices
+
 if __name__ == '__main__':
-    voters = 100
+    voters = 10
     candidates = 5
     votings = get_voting_situation(voters, candidates)
     possible_manipulations = single_voter_manipulation(votings)
-    print(possible_manipulations)
 
-    groups = create_groups(votings, 20)
+    groups,indices = create_groups_final(votings, 20)
+    print("hi")
+    # groups = create_groups_onlybiggest(votings, 20)
 
     # similar voters -> list of list (different voting preferences among similar voters -> compare happyness to origin preference)
     #                -> for each group manipulation needs to be better than for each voters origin preference
