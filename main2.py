@@ -137,8 +137,7 @@ class BordaVoting(VotingScheme):
 
 
 def create_voting_situation(n_voters, n_candidates):
-    # TODO: change mapping to be more dynamic
-    mapping = ["A", "B", "C", "D", "E"]
+    mapping = [str(chr(i)) for i in range(65, 65 + n_candidates)]
 
     # shuffle the mapping in order to create random
     # preferences for each voter
@@ -419,6 +418,7 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     # if no voter was specified, then draw the graph for every voter
     # available in manipulations
     if voter == -1:
+        # FIXME: 10 is hardcoded, will not work with dynamically set voters
         for i in range(10):
             b = manipulations[manipulations[:, 0] == i][:, 2]
             p.bar(range(len(b)), b)
@@ -438,39 +438,46 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
 if __name__ == '__main__':
     global active_scheme
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 12))
-    voters = 10
-    candidates = 5
+    voters = int(input("Insert amount of Voters: "))
+    candidates = int(input("Insert amount of Candidates: "))
+    print()
+
     # create the schemes we want to compare
     idx = [[0, 0], [0, 1], [1, 0], [1, 1]]
     schemes = [(VotingForOne, "Voting for 1"), (VotingForTwo, "Voting for 2"),
                (AntiPluralityVoting, "Anti-Plural Voting"), (BordaVoting, "Borda Voting")]
     votings, mapping = create_voting_situation(voters, candidates)
     for i, scheme in enumerate(schemes):
+        print("Active Voting Scheme: ", scheme[1])
         active_scheme = scheme[0](mapping)
         possible_manipulations = s_voter_manipulation(votings)
+        print("\tAmount of Manipulations: ", len(possible_manipulations))
 
         p = ax[idx[i][0]][idx[i][1]]
         visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
 
+        # risk function
+        pmcount = len(possible_manipulations)
+        risk_single = (pmcount/(voters*math.factorial(candidates)))*100
+        print("\tRisk of Single Manipulation: ", risk_single)
+
+        groups, indices = create_groups_final(votings, 20)
+
+        tactical_votings = []
+        singleGroupCount = 0
+        for i, group in enumerate(groups):
+            if len(group) == 1:
+                singleGroupCount += 1
+            tactical_votings.append([indices[i], multiple_voter_manipulations(
+                votings, indices[i], list(multiset_permutations(votings[0])))])
+            # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
+
+        risk_groups = 100-(singleGroupCount/voters*100)
+        print("\tRisk of Group Manipulation: ", risk_groups)
+        print()
+
     fig.show()
     input("Showing graphs. Waiting... (press ENTER to continue)")
-
-    # risk function
-    pmcount = len(possible_manipulations)
-    risk_single = (pmcount/(voters*math.factorial(candidates)))*100
-
-    groups, indices = create_groups_final(votings, 20)
-
-    tactical_votings = []
-    singleGroupCount = 0
-    for i, group in enumerate(groups):
-        if len(group) == 1:
-            singleGroupCount += 1
-        tactical_votings.append([indices[i], multiple_voter_manipulations(
-            votings, indices[i], list(multiset_permutations(votings[0])))])
-        # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
-
-    risk_groups = 100-(singleGroupCount/voters*100)
     # tactical_votings -> [ coalition1, coalition2, coalition3 ] where coalition [ [ members ], [manipulations] ]
 
     # groups = create_groups_onlybiggest(votings, 20)
