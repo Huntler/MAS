@@ -236,7 +236,7 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
     coalition_votings = []
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
-    for permutation in range(len(all_permutations)):
+    for permutation in tqdm.tqdm(range(len(all_permutations))):
         temp_votings = origin_votings.copy()
         for member in coalition:
             coalition_votings.append(temp_votings[member])
@@ -416,8 +416,19 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
 
 if __name__ == '__main__':
     global active_scheme
+
+    idx = [[0, 0], [0, 1], [1, 0], [1, 1]]
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 12))
+    schemes = [(VotingForOne, "Voting for 1"), (VotingForTwo, "Voting for 2"),
+               (AntiPluralityVoting, "Anti-Plural Voting"), (BordaVoting, "Borda Voting")]
+
+    scheme_titles = []
+    for i, scheme in enumerate(schemes):
+        scheme_titles.append(f"({i+1}) {scheme[1]};")
+
+    print(" ".join(scheme_titles))
     try:
+        scheme_idx = int(input("Select the Voting Scheme: ")) - 1
         voters = int(input("Insert amount of Voters: "))
         candidates = int(input("Insert amount of Candidates: "))
     except:
@@ -425,39 +436,40 @@ if __name__ == '__main__':
         quit()
     print()
 
-    # create the schemes we want to compare
-    idx = [[0, 0], [0, 1], [1, 0], [1, 1]]
-    schemes = [(VotingForOne, "Voting for 1"), (VotingForTwo, "Voting for 2"),
-               (AntiPluralityVoting, "Anti-Plural Voting"), (BordaVoting, "Borda Voting")]
+    if scheme_idx < 0 or scheme_idx > len(schemes) -1:
+        print(f"The Voting scheme {scheme_idx} does not exist.")
+        quit()
+
     votings, mapping = create_voting_situation(voters, candidates)
-    for i, scheme in enumerate(schemes):
-        print("Active Voting Scheme: ", scheme[1])
-        active_scheme = scheme[0](mapping)
-        possible_manipulations = s_voter_manipulation(votings)
-        print("\tAmount of Manipulations: ", len(possible_manipulations))
+    active_scheme = schemes[scheme_idx][0](mapping)
 
-        p = ax[idx[i][0]][idx[i][1]]
-        visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
+    print("Active Voting Scheme: ", schemes[scheme_idx][1])
+    possible_manipulations = s_voter_manipulation(votings)
 
-        # risk function
-        pmcount = len(possible_manipulations)
-        risk_single = (pmcount/(voters*math.factorial(candidates)))*100
-        print("\tRisk of Single Manipulation: ", risk_single)
+    p = ax[idx[i][0]][idx[i][1]]
+    visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
 
-        groups, indices = create_groups_final(votings, 20)
+    groups, indices = create_groups_final(votings, 20)
 
-        tactical_votings = []
-        singleGroupCount = 0
-        for i, group in enumerate(groups):
-            if len(group) == 1:
-                singleGroupCount += 1
-            tactical_votings.append([indices[i], multiple_voter_manipulations(
-                votings, indices[i], list(multiset_permutations(votings[0])))])
-            # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
+    tactical_votings = []
+    singleGroupCount = 0
+    for i, group in enumerate(groups):
+        if len(group) == 1:
+            singleGroupCount += 1
+        tactical_votings.append([indices[i], multiple_voter_manipulations(
+            votings, indices[i], list(multiset_permutations(votings[0])))])
+        # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
 
-        risk_groups = 100-(singleGroupCount/voters*100)
-        print("\tRisk of Group Manipulation: ", risk_groups)
-        print()
+    risk_groups = 100-(singleGroupCount/voters*100)
+
+    print("\tAmount of Manipulations: ", len(possible_manipulations))
+
+    # # risk function
+    pmcount = len(possible_manipulations)
+    risk_single = (pmcount/(voters*math.factorial(candidates)))*100
+    print("\tRisk of Single Manipulation: ", risk_single)
+    print("\tRisk of Group Manipulation: ", risk_groups)
+    print()
 
     fig.show()
     input("Showing graphs. Waiting... (press ENTER to continue)")
