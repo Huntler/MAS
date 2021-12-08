@@ -1,11 +1,8 @@
 from abc import ABC, abstractmethod
 import math
-import random
-import itertools
 import tqdm
 import numpy as np
 from typing import Set, Dict, List
-#from main import *
 from sympy.utilities.iterables import multiset_permutations
 import matplotlib.pyplot as plt
 
@@ -418,13 +415,13 @@ def create_groups_final(votings, threshold):
 def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", p=plt):
     # if no voter was specified, then draw the graph for every voter
     # available in manipulations
+    n_voters = manipulations[:, 0].max() + 1
     if voter == -1:
-        # FIXME: 10 is hardcoded, will not work with dynamically set voters
-        for i in range(10):
+        for i in range(n_voters):
             b = manipulations[manipulations[:, 0] == i][:, 2]
             p.bar(range(len(b)), b)
 
-        p.legend([f"Voter {i}" for i in range(10)])
+        p.legend([f"Voter {j}" for j in range(n_voters)])
 
     else:
         b = manipulations[manipulations[:, 0] == voter][:, 2]
