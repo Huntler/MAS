@@ -257,7 +257,7 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
     coalition_votings = []
     coalition_happiness_i = []
     winners = get_winners(origin_votings)
-    for permutation in range(len(all_permutations)):
+    for permutation in tqdm.tqdm(range(len(all_permutations))):
         temp_votings = origin_votings.copy()
         for member in coalition:
             coalition_votings.append(temp_votings[member])
@@ -456,15 +456,9 @@ if __name__ == '__main__':
         print("Active Voting Scheme: ", scheme[1])
         active_scheme = scheme[0](mapping)
         possible_manipulations = s_voter_manipulation(votings)
-        print("\tAmount of Manipulations: ", len(possible_manipulations))
 
         p = ax[idx[i][0]][idx[i][1]]
         visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
-
-        # risk function
-        pmcount = len(possible_manipulations)
-        risk_single = (pmcount/(voters*math.factorial(candidates)))*100
-        print("\tRisk of Single Manipulation: ", risk_single)
 
         groups, indices = create_groups_final(votings, 20)
 
@@ -478,6 +472,13 @@ if __name__ == '__main__':
             # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
 
         risk_groups = 100-(singleGroupCount/voters*100)
+
+        print("\tAmount of Manipulations: ", len(possible_manipulations))
+
+        # # risk function
+        pmcount = len(possible_manipulations)
+        risk_single = (pmcount/(voters*math.factorial(candidates)))*100
+        print("\tRisk of Single Manipulation: ", risk_single)
         print("\tRisk of Group Manipulation: ", risk_groups)
         print()
 
