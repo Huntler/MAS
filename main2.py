@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import math
 import random
 import itertools
+import tqdm
 import numpy as np
 from typing import Set, Dict, List
 #from main import *
@@ -170,7 +171,7 @@ def s_voter_manipulation(votings):
 
     # temporary save the original outcome to calculate the original happiness for
     # each voter to compare the manipulation with
-    for i, voting in enumerate(_votings):
+    for i, voting in enumerate(tqdm.tqdm(_votings)):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = hf(o_outcome, voting)
 
@@ -438,8 +439,12 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
 if __name__ == '__main__':
     global active_scheme
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 12))
-    voters = int(input("Insert amount of Voters: "))
-    candidates = int(input("Insert amount of Candidates: "))
+    try:
+        voters = int(input("Insert amount of Voters: "))
+        candidates = int(input("Insert amount of Candidates: "))
+    except:
+        print("Wrong input type given. Exit.")
+        quit()
     print()
 
     # create the schemes we want to compare
