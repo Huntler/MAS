@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import math
 import tqdm
 import numpy as np
+import sys, getopt, os
 from typing import Set, Dict, List
 from sympy.utilities.iterables import multiset_permutations
 import matplotlib.pyplot as plt
@@ -146,6 +147,22 @@ def create_voting_situation(n_voters, n_candidates):
         votings.append(preference.copy())
 
     return np.asarray(votings), mapping
+
+
+def create_voting_situation_from_file(file):
+    #open file from path
+    f = open('./votingsituation.txt', 'r')
+    first_line = f.readline().split(',')
+    votings = []
+    #fill with first preferences
+    for c in first_line:
+        votings.append([c])
+    #append with following preferences
+    for l in f:
+        tmp = l.split(',')
+        for i, c in enumerate(tmp):
+            votings[i].append(c)
+    return votings, np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line))])
 
 
 def happiness(i: np.array, j: np.array, s: float = 0.9):
@@ -436,18 +453,52 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
 if __name__ == '__main__':
     global active_scheme
 
+    #file input
+    inputfile = ''
+    fileinput = False
+    try:
+        opts, args = getopt.getopt(sys.argv, "hi:")
+    except getopt.GetoptError:
+        print('tva.py [-h] [-i <inputfile>]')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('tva.py [-h] [-i <inputfile>]')
+            sys.exit()
+        elif opt == '-i':
+            inputfile = arg
+            fileinput = True
+        else:
+            print('tva.py [-h] [-i <inputfile>]')
+            sys.exit()
+    if (not os.path.exists(inputfile)) and (inputfile != ''):
+        print('The provided inputfile is not valid!')
+        sys.exit()
+
+    #voting schemes
     idx = [[0, 0], [0, 1], [1, 0], [1, 1]]
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 12))
     schemes = [(VotingForOne, "Voting for 1"), (VotingForTwo, "Voting for 2"),
                (AntiPluralityVoting, "Anti-Plural Voting"), (BordaVoting, "Borda Voting")]
-    
+
     scheme_titles = []
     for i, scheme in enumerate(schemes):
-        scheme_titles.append(f"({i+1}) {scheme[1]};")
-    
+        scheme_titles.append(f"({i + 1}) {scheme[1]};")
+
     print(" ".join(scheme_titles))
+
     try:
         scheme_idx = int(input("Select the Voting Scheme: ")) - 1
+    except:
+        print("Wrong input type given. Exit.")
+        quit()
+
+    if scheme_idx < 0 or scheme_idx > len(schemes) - 1:
+        print(f"The Voting scheme {scheme_idx} does not exist.")
+        quit()
+
+    #voting sitations
+    try:
         voters = int(input("Insert amount of Voters: "))
         candidates = int(input("Insert amount of Candidates: "))
     except:
@@ -455,11 +506,11 @@ if __name__ == '__main__':
         quit()
     print()
 
-    if scheme_idx < 0 or scheme_idx > len(schemes) -1:
-        print(f"The Voting scheme {scheme_idx} does not exist.")
-        quit()
+    if fileinput:
+        votings, mapping = create_voting_situation_from_file(inputfile)
+    else:
+        votings, mapping = create_voting_situation(voters, candidates)
 
-    votings, mapping = create_voting_situation(voters, candidates)
     active_scheme = schemes[scheme_idx][0](mapping)
 
     print("Active Voting Scheme: ", schemes[scheme_idx][1])
@@ -479,13 +530,13 @@ if __name__ == '__main__':
             votings, indices[i], list(multiset_permutations(votings[0])))])
         # tactical_votings.append(multiple_voter_manipulations(votings, group, possible_manipulations)
 
-    risk_groups = 100-(singleGroupCount/voters*100)
+    risk_groups = 100 - (singleGroupCount / voters * 100)
 
     print("\tAmount of Manipulations: ", len(possible_manipulations))
 
     # # risk function
     pmcount = len(possible_manipulations)
-    risk_single = (pmcount/(voters*math.factorial(candidates)))*100
+    risk_single = (pmcount / (voters * math.factorial(candidates))) * 100
     print("\tRisk of Single Manipulation: ", risk_single)
     print("\tRisk of Group Manipulation: ", risk_groups)
     print()
@@ -500,3 +551,8 @@ if __name__ == '__main__':
     #                -> for each group manipulation needs to be better than for each voters origin preference
 
     #
+    # inputfile structure:
+    # C,B,C,B,B
+    # A,D,D,D,C
+    # D,C,A,D,C
+    # B,A,B,A,A
