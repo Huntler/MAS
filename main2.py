@@ -166,6 +166,7 @@ def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
 
 
 def s_voter_manipulation(votings):
+
     _votings = votings.copy()
     manipulated_preferences = []
 
@@ -173,24 +174,16 @@ def s_voter_manipulation(votings):
     # each voter to compare the manipulation with
     for i, voting in enumerate(tqdm.tqdm(_votings)):
         o_outcome = active_scheme.compute_res(_votings)
-<<<<<<< HEAD
-        o_happiness = hf(o_outcome, voting)
-        overall_o_happiness = o_happiness / len(_votings)
-=======
         o_happiness = happiness(o_outcome, voting)
->>>>>>> 4e06b3cb6d1b38f7f3bebc4e9d0209ce28bbd557
+        overall_o_happiness = o_happiness / len(_votings)
+        o_happiness = happiness(o_outcome, voting)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
-<<<<<<< HEAD
-            h_val = hf(outcome, voting)
-            overall_h_val = h_val / len(_votings)
-
-=======
             h_val = happiness(outcome, voting)
->>>>>>> 4e06b3cb6d1b38f7f3bebc4e9d0209ce28bbd557
+            overall_h_val = h_val / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
             if h_val > o_happiness:
