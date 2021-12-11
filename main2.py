@@ -150,7 +150,7 @@ def create_voting_situation(n_voters, n_candidates):
     return np.asarray(votings), mapping
 
 
-def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
+def happiness(i: np.array, j: np.array, s: float = 0.9):
     m = len(i)
     s1 = np.power([s for l in range(m)], np.power(range(m), 2))
     s2 = np.power([s for l in range(m)], np.power(m - np.array(range(m)), 2))
@@ -173,16 +173,19 @@ def s_voter_manipulation(votings):
     for i, voting in enumerate(_votings):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = hf(o_outcome, voting)
+        overall_o_happiness = o_happiness / len(_votings)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
             h_val = hf(outcome, voting)
+            overall_h_val = h_val / len(_votings)
+
 
             # if the h_val is higher (better) than before, then store this manipulation
             if h_val > o_happiness:
-                ordering = [i, np.asarray(manipulation), h_val]
+                ordering = [i, np.asarray(manipulation), outcome, h_val, o_happiness, overall_h_val, overall_o_happiness]
                 manipulated_preferences.append(ordering)
 
         # revert the votings to the original, in order to test other manipulations
@@ -379,7 +382,7 @@ def counter_voting(origin_votings, coalition1, coalition2, permutations):
             temp_new_origin_votings[member] = permutation
 
         temp_winners = get_winners(temp_new_origin_votings)
-        temp_happiness = overall_happiness(coalition1, temp_winners)
+        temp_happiness = overall_happiness(temp_new_origin_votings, coalition1, temp_winners)
 
         if temp_happiness >= origin_happiness:
             all_counter_tactical_votings.append((permutation, temp_happiness))
@@ -451,7 +454,22 @@ if __name__ == '__main__':
         print("Active Voting Scheme: ", scheme[1])
         active_scheme = scheme[0](mapping)
         possible_manipulations = s_voter_manipulation(votings)
-        print("\tAmount of Manipulations: ", len(possible_manipulations))
+        original_winner = get_winners(votings)
+        print("\tNon-strategic voting outcome: ", original_winner)
+        original_happinesses = happiness(np.array(original_winner), np.array(votings))
+        print("\thppiness level for each voter i: ", original_happinesses)
+        print("\toverall happiness: ", sum(original_happinesses)/len(original_happinesses))
+
+        for possible_manipulation in possible_manipulations:
+            print(f"\tstrategic voting option for voter {possible_manipulation[0]}: "
+                  f"\n \t manipulation: {possible_manipulation[1]},"
+                  f"\n \t outcome: {possible_manipulation[2]},"
+                  f"\n \t manipulated happiness: {possible_manipulation[3]}"
+                  f"\n \t true happiness: {possible_manipulation[4]} "
+                  f"\n \t overall manipulated happiness: {possible_manipulation[5]}"
+                  f"\n \t overall true happiness: {possible_manipulation[6]}")
+
+
 
         p = ax[idx[i][0]][idx[i][1]]
         visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
