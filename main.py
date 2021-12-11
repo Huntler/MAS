@@ -44,14 +44,6 @@ def happiness(i: np.array, j: np.array, s: float=0.9) -> float:
     h_hat = np.sum(d * (s1 + s2)) / m
     return np.exp(-h_hat)
 
-def overall_happiness(group, result):
-    overall_happiness = 0
-    for member in group:
-        member_happiness = happiness(np.array(result), np.array(member))
-        overall_happiness += member_happiness
-    overall_happiness /= len(group)
-    return  overall_happiness
-
 def single_voter_manipulation(votings):
     preferred_preferences = []
     for voting in range(len(votings)):
