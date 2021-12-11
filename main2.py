@@ -156,13 +156,13 @@ def create_voting_situation_from_file(file):
         votings = []
         #fill with first preferences
         for c in first_line:
-            votings.append([c])
+            votings.append([c.strip()])
         #append with following preferences
         for l in f:
             tmp = l.split(',')
             for i, c in enumerate(tmp):
-                votings[i].append(c)
-    return votings, np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line))])
+                votings[i].append(c.strip())
+    return np.asarray(votings), np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line)-1)])
 
 
 def happiness(i: np.array, j: np.array, s: float = 0.9):
@@ -454,10 +454,12 @@ if __name__ == '__main__':
     global active_scheme
 
     #file input
+    argv = sys.argv[1:]
     inputfile = ''
     fileinput = False
     try:
-        opts, args = getopt.getopt(sys.argv, "hi:")
+        print("")
+        opts, args = getopt.getopt(argv, "hi:")
     except getopt.GetoptError:
         print('tva.py [-h] [-i <inputfile>]')
         sys.exit(2)
@@ -498,18 +500,19 @@ if __name__ == '__main__':
         quit()
 
     #voting sitations
-    try:
-        voters = int(input("Insert amount of Voters: "))
-        candidates = int(input("Insert amount of Candidates: "))
-    except:
-        print("Wrong input type given. Exit.")
-        quit()
-    print()
-
-    if fileinput:
-        votings, mapping = create_voting_situation_from_file(inputfile)
-    else:
+    if not fileinput:
+        try:
+            voters = int(input("Insert amount of Voters: "))
+            candidates = int(input("Insert amount of Candidates: "))
+        except:
+            print("Wrong input type given. Exit.")
+            quit()
+        print()
         votings, mapping = create_voting_situation(voters, candidates)
+    else:
+        votings, mapping = create_voting_situation_from_file(inputfile)
+        voters = len(votings)
+        candidates = len(votings[0])
 
     active_scheme = schemes[scheme_idx][0](mapping)
 
