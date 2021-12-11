@@ -151,17 +151,17 @@ def create_voting_situation(n_voters, n_candidates):
 
 def create_voting_situation_from_file(file):
     #open file from path
-    f = open('./votingsituation.txt', 'r')
-    first_line = f.readline().split(',')
-    votings = []
-    #fill with first preferences
-    for c in first_line:
-        votings.append([c])
-    #append with following preferences
-    for l in f:
-        tmp = l.split(',')
-        for i, c in enumerate(tmp):
-            votings[i].append(c)
+    with open('./votingsituation.txt', 'r') as f:
+        first_line = f.readline().split(',')
+        votings = []
+        #fill with first preferences
+        for c in first_line:
+            votings.append([c])
+        #append with following preferences
+        for l in f:
+            tmp = l.split(',')
+            for i, c in enumerate(tmp):
+                votings[i].append(c)
     return votings, np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line))])
 
 
