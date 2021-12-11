@@ -16,19 +16,6 @@ class VotingScheme(ABC):
     def compute_res(self, preferences) -> list:
         raise NotImplemented
 
-    def _encode(self, ranking: np.array) -> np.array:
-        preferences = ranking.copy()
-
-        d = {self._mapping[n]: n for n in range(self._mapping.shape[0])}
-        for mapping in self._mapping:
-            preferences = np.where(
-                preferences != mapping, preferences, d[mapping])
-
-        return preferences.astype(int)
-
-    def _decode(self, ranking: np.array) -> np.array:
-        return self._mapping[ranking]
-
 
 class VotingForOne(VotingScheme):
     def compute_res(self, preferences: np.array):
@@ -165,39 +152,42 @@ def create_voting_situation_from_file(file):
     return np.asarray(votings), np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line)-1)])
 
 
-def happiness(i: np.array, j: np.array, s: float = 0.9):
+def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
+    i_index = {val: index for index, val in enumerate(i)}
+    j_index = {val: index for index, val in enumerate(j)}
+    d1 = np.abs([i_index[val] - j_index[val] for val in i])
+    d2 = np.abs([i_index[val] - j_index[val] for val in j])
+    d = d1 + d2
     m = len(i)
-    s1 = np.power([s for l in range(m)], np.power(range(m), 2))
-    s2 = np.power([s for l in range(m)], np.power(m - np.array(range(m)), 2))
-    d = np.abs(np.subtract(j, i))
-    h_hat = np.sum(d * (s1 + s2), axis=1) / m
+    # TODO s1+s2 doesn't work for small m (m<7)
+    s1 = np.power(s, np.power(range(m), 2))
+    h_hat = np.sum(d * (s1 + s1[::-1])) / m
     return np.exp(-h_hat)
 
 
 def s_voter_manipulation(votings):
+
     _votings = votings.copy()
     manipulated_preferences = []
-
-    def hf(a, b):
-        _a = [active_scheme._encode(a)]
-        _b = [active_scheme._encode(b)]
-        return happiness(_a, _b)[0]
 
     # temporary save the original outcome to calculate the original happiness for
     # each voter to compare the manipulation with
     for i, voting in enumerate(tqdm.tqdm(_votings)):
         o_outcome = active_scheme.compute_res(_votings)
-        o_happiness = hf(o_outcome, voting)
+        o_happiness = happiness(o_outcome, voting)
+        overall_o_happiness = o_happiness / len(_votings)
+        o_happiness = happiness(o_outcome, voting)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
-            h_val = hf(outcome, voting)
+            h_val = happiness(outcome, voting)
+            overall_h_val = h_val / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
             if h_val > o_happiness:
-                ordering = [i, np.asarray(manipulation), h_val]
+                ordering = [i, np.asarray(manipulation), outcome, h_val, o_happiness, overall_h_val, overall_o_happiness]
                 manipulated_preferences.append(ordering)
 
         # revert the votings to the original, in order to test other manipulations
@@ -262,11 +252,6 @@ def lengths_sufficient(teams) -> bool:
 
 
 def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
-    def hf(a, b):
-        _a = [active_scheme._encode(a)]
-        _b = [active_scheme._encode(b)]
-        return happiness(_a, _b)[0]
-
     multiple_voter_manipulations = []
     coalition_votings = []
     coalition_happiness_i = []
@@ -276,13 +261,12 @@ def multiple_voter_manipulations(origin_votings, coalition, all_permutations):
         for member in coalition:
             coalition_votings.append(temp_votings[member])
             coalition_happiness_i.append(
-                hf(np.array(winners), np.array(temp_votings[member])))
+                happiness(np.array(winners), np.array(temp_votings[member])))
             temp_votings[member] = all_permutations[permutation]
         temp_winners = get_winners(temp_votings)
         all_happier = 1
         for member in range(len(coalition)):
-            temp_happiness = hf(
-                np.array(temp_winners), np.array(coalition_votings[member]))
+            temp_happiness = happiness( np.array(temp_winners), np.array(coalition_votings[member]))
             if temp_happiness <= coalition_happiness_i[member]:
                 all_happier = 0
                 break
@@ -394,7 +378,7 @@ def counter_voting(origin_votings, coalition1, coalition2, permutations):
             temp_new_origin_votings[member] = permutation
 
         temp_winners = get_winners(temp_new_origin_votings)
-        temp_happiness = overall_happiness(coalition1, temp_winners)
+        temp_happiness = overall_happiness(temp_new_origin_votings, coalition1, temp_winners)
 
         if temp_happiness >= origin_happiness:
             all_counter_tactical_votings.append((permutation, temp_happiness))
@@ -518,6 +502,21 @@ if __name__ == '__main__':
 
     print("Active Voting Scheme: ", schemes[scheme_idx][1])
     possible_manipulations = s_voter_manipulation(votings)
+
+    original_winner = get_winners(votings)
+    print("\tNon-strategic voting outcome: ", original_winner)
+    original_happinesses = happiness(np.array(original_winner), np.array(votings))
+    print("\thppiness level for each voter i: ", original_happinesses)
+    print("\toverall happiness: ", sum(original_happinesses)/len(original_happinesses))
+
+    for possible_manipulation in possible_manipulations:
+        print(f"\tstrategic voting option for voter {possible_manipulation[0]}: "
+              f"\n \t manipulation: {possible_manipulation[1]},"
+              f"\n \t outcome: {possible_manipulation[2]},"
+              f"\n \t manipulated happiness: {possible_manipulation[3]}"
+              f"\n \t true happiness: {possible_manipulation[4]} "
+              f"\n \t overall manipulated happiness: {possible_manipulation[5]}"
+              f"\n \t overall true happiness: {possible_manipulation[6]}")
 
     p = ax[idx[i][0]][idx[i][1]]
     visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
