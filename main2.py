@@ -199,15 +199,14 @@ def s_voter_manipulation(votings):
     for i, voting in enumerate(tqdm.tqdm(_votings)):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = happiness(o_outcome, voting)
-        overall_o_happiness = o_happiness / len(_votings)
-        o_happiness = happiness(o_outcome, voting)
+        overall_o_happiness = sum(happiness(o_outcome, _votings)) / len(_votings)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
             h_val = happiness(outcome, voting)
-            overall_h_val = h_val / len(_votings)
+            overall_h_val = sum(happiness(outcome, _votings)) / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
             if h_val > o_happiness:
