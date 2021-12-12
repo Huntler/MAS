@@ -181,13 +181,13 @@ def s_voter_manipulation(votings):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = happiness(o_outcome, voting)
         overall_o_happiness = o_happiness / len(_votings)
-        o_happiness = happiness(o_outcome, voting)
+        o_happiness = happiness(o_outcome, voting)[0]
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
-            h_val = happiness(outcome, voting)
+            h_val = happiness(outcome, voting)[0]
             overall_h_val = h_val / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
@@ -424,13 +424,13 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     n_voters = manipulations[:, 0].max() + 1
     if voter == -1:
         for i in range(n_voters):
-            b = manipulations[manipulations[:, 0] == i][:, 2]
+            b = manipulations[manipulations[:, 0] == i][:, 3]
             p.bar(range(len(b)), b)
 
         p.legend([f"Voter {j}" for j in range(n_voters)])
 
     else:
-        b = manipulations[manipulations[:, 0] == voter][:, 2]
+        b = manipulations[manipulations[:, 0] == voter][:, 3]
         p.bar(range(len(b)), b)
         p.legend([f"Voter {voter}"])
 
