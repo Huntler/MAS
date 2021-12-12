@@ -154,19 +154,14 @@ def create_voting_situation_from_file(file):
 
 def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     i_index = {val: index for index, val in enumerate(i)}
-    if len(j.shape) == 1:
-        j = j[np.newaxis, :]
-    d = []
-    for single_j in j:
-        j_index = {val: index for index, val in enumerate(single_j)}
-        d1 = np.abs([i_index[val] - j_index[val] for val in i])
-        d2 = np.abs([i_index[val] - j_index[val] for val in single_j])
-        d.append(d1 + d2)
-    d = np.array(d)
+    j_index = {val: index for index, val in enumerate(j)}
+    d1 = np.abs([i_index[val] - j_index[val] for val in i])
+    d2 = np.abs([i_index[val] - j_index[val] for val in j])
+    d = d1 + d2
     m = len(i)
     # TODO s1+s2 doesn't work for small m (m<7)
     s1 = np.power(s, np.power(range(m), 2))
-    h_hat = np.sum(d * (s1 + s1[::-1]),axis=1) / m
+    h_hat = np.sum(d * (s1 + s1[::-1])) / m
     return np.exp(-h_hat)
 
 
@@ -181,13 +176,13 @@ def s_voter_manipulation(votings):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = happiness(o_outcome, voting)
         overall_o_happiness = o_happiness / len(_votings)
-        o_happiness = happiness(o_outcome, voting)[0]
+        o_happiness = happiness(o_outcome, voting)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
-            h_val = happiness(outcome, voting)[0]
+            h_val = happiness(outcome, voting)
             overall_h_val = h_val / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
@@ -424,13 +419,13 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     n_voters = manipulations[:, 0].max() + 1
     if voter == -1:
         for i in range(n_voters):
-            b = manipulations[manipulations[:, 0] == i][:, 3]
+            b = manipulations[manipulations[:, 0] == i][:, 2]
             p.bar(range(len(b)), b)
 
         p.legend([f"Voter {j}" for j in range(n_voters)])
 
     else:
-        b = manipulations[manipulations[:, 0] == voter][:, 3]
+        b = manipulations[manipulations[:, 0] == voter][:, 2]
         p.bar(range(len(b)), b)
         p.legend([f"Voter {voter}"])
 
@@ -468,6 +463,7 @@ if __name__ == '__main__':
         elif opt == '-i':
             inputfile = arg
             fileinput = True
+        else:
             helpme()
             sys.exit()
     if (not os.path.exists(inputfile)) and (inputfile != ''):
@@ -490,11 +486,11 @@ if __name__ == '__main__':
         scheme_idx = int(input("Select the Voting Scheme: ")) - 1
     except:
         print("Wrong input type given. Exit.")
-        quit(1)
+        quit()
 
     if scheme_idx < 0 or scheme_idx > len(schemes) - 1:
         print(f"The Voting scheme {scheme_idx} does not exist.")
-        quit(1)
+        quit()
 
     #voting sitations
     if not fileinput:
@@ -503,7 +499,7 @@ if __name__ == '__main__':
             candidates = int(input("Insert amount of Candidates: "))
         except:
             print("Wrong input type given. Exit.")
-            quit(1)
+            quit()
         print()
         votings, mapping = create_voting_situation(voters, candidates)
     else:
@@ -568,6 +564,6 @@ if __name__ == '__main__':
     #
     # inputfile structure:
     # C,B,C,B,B
-    # A,D,D,C,C
-    # D,C,A,D,D
+    # A,D,D,D,C
+    # D,C,A,D,C
     # B,A,B,A,A
