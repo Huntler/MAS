@@ -138,31 +138,39 @@ def create_voting_situation(n_voters, n_candidates):
 
 def create_voting_situation_from_file(file):
     #open file from path
-    with open('./votingsituation.txt', 'r') as f:
+    with open(file, 'r') as f:
         first_line = f.readline().split(',')
         votings = []
         #fill with first preferences
         for c in first_line:
-            votings.append([c])
+            votings.append([c.strip()])
         #append with following preferences
         for l in f:
             tmp = l.split(',')
             for i, c in enumerate(tmp):
-                votings[i].append(c)
-    return votings, np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line))])
+                votings[i].append(c.strip())
+    return np.asarray(votings), np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line)-1)])
 
 
 def happiness(i: np.array, j: np.array, s: float = 0.9):
     i_index = {val: index for index, val in enumerate(i)}
-    j_index = {val: index for index, val in enumerate(j)}
-    d1 = np.abs([i_index[val] - j_index[val] for val in i])
-    d2 = np.abs([i_index[val] - j_index[val] for val in j])
-    d = d1 + d2
+    if len(j.shape) == 1:
+        j = j[np.newaxis, :]
+    d = []
+    for single_j in j:
+        j_index = {val: index for index, val in enumerate(single_j)}
+        d1 = np.abs([i_index[val] - j_index[val] for val in i])
+        d2 = np.abs([i_index[val] - j_index[val] for val in single_j])
+        d.append(d1 + d2)
+    d = np.array(d)
     m = len(i)
     # TODO s1+s2 doesn't work for small m (m<7)
     s1 = np.power(s, np.power(range(m), 2))
-    h_hat = np.sum(d * (s1 + s1[::-1])) / m
-    return np.exp(-h_hat)
+    h_hat = np.sum(d * (s1 + s1[::-1] / 2), axis=1) / m
+    ret = np.exp(-h_hat)
+    if len(ret) == 1:
+        return ret[0]
+    return ret
 
 
 def s_voter_manipulation(votings):
@@ -419,13 +427,13 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     n_voters = manipulations[:, 0].max() + 1
     if voter == -1:
         for i in range(n_voters):
-            b = manipulations[manipulations[:, 0] == i][:, 2]
+            b = manipulations[manipulations[:, 0] == i][:, 3]
             p.bar(range(len(b)), b)
 
         p.legend([f"Voter {j}" for j in range(n_voters)])
 
     else:
-        b = manipulations[manipulations[:, 0] == voter][:, 2]
+        b = manipulations[manipulations[:, 0] == voter][:, 3]
         p.bar(range(len(b)), b)
         p.legend([f"Voter {voter}"])
 
@@ -433,27 +441,38 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     p.set_xlabel("Permutation")
     p.set_ylabel("Happiness")
 
+def helpme():
+    print("\t Intendet Execution Call: tva.exe [-h] [-i <inputfile path>]   \n\n"
+          "\t Optional Parameters:   \n"
+          "\t\t -h \t display this help \n"
+          "\t\t -i \t start tva with a prepared voting situation    \n\n"
+          "\t Arguments:    \n"
+          "\t\t <inputfile path> \t direct path from .exe location to voting situation file \n\n"
+          "\t Voting Situation File Structure:  \n"
+          "\t\t Columns: Voters \n"
+          "\t\t Rows:    Voter Preference   \n")
 
 if __name__ == '__main__':
     global active_scheme
 
     #file input
+    argv = sys.argv[1:]
     inputfile = ''
     fileinput = False
     try:
-        opts, args = getopt.getopt(sys.argv, "hi:")
+        opts, args = getopt.getopt(argv, "hi:")
     except getopt.GetoptError:
-        print('tva.py [-h] [-i <inputfile>]')
+        helpme()
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('tva.py [-h] [-i <inputfile>]')
+            helpme()
             sys.exit()
         elif opt == '-i':
             inputfile = arg
             fileinput = True
         else:
-            print('tva.py [-h] [-i <inputfile>]')
+            helpme()
             sys.exit()
     if (not os.path.exists(inputfile)) and (inputfile != ''):
         print('The provided inputfile is not valid!')
@@ -475,25 +494,26 @@ if __name__ == '__main__':
         scheme_idx = int(input("Select the Voting Scheme: ")) - 1
     except:
         print("Wrong input type given. Exit.")
-        quit()
+        quit(1)
 
     if scheme_idx < 0 or scheme_idx > len(schemes) - 1:
         print(f"The Voting scheme {scheme_idx} does not exist.")
-        quit()
+        quit(1)
 
     #voting sitations
-    try:
-        voters = int(input("Insert amount of Voters: "))
-        candidates = int(input("Insert amount of Candidates: "))
-    except:
-        print("Wrong input type given. Exit.")
-        quit()
-    print()
-
-    if fileinput:
-        votings, mapping = create_voting_situation_from_file(inputfile)
-    else:
+    if not fileinput:
+        try:
+            voters = int(input("Insert amount of Voters: "))
+            candidates = int(input("Insert amount of Candidates: "))
+        except:
+            print("Wrong input type given. Exit.")
+            quit(1)
+        print()
         votings, mapping = create_voting_situation(voters, candidates)
+    else:
+        votings, mapping = create_voting_situation_from_file(inputfile)
+        voters = len(votings)
+        candidates = len(votings[0])
 
     active_scheme = schemes[scheme_idx][0](mapping)
 
@@ -501,19 +521,19 @@ if __name__ == '__main__':
     possible_manipulations = s_voter_manipulation(votings)
 
     original_winner = get_winners(votings)
-    print("\tNon-strategic voting outcome: ", original_winner)
+    print("\t Non-strategic voting outcome: ", original_winner)
     original_happinesses = happiness(np.array(original_winner), np.array(votings))
-    print("\thppiness level for each voter i: ", original_happinesses)
-    print("\toverall happiness: ", sum(original_happinesses)/len(original_happinesses))
+    print("\t Happiness level for each voter i: ", original_happinesses)
+    print(f"\t Overall Happiness: {round(sum(original_happinesses)/len(original_happinesses),4)} \n")
 
     for possible_manipulation in possible_manipulations:
-        print(f"\tstrategic voting option for voter {possible_manipulation[0]}: "
-              f"\n \t manipulation: {possible_manipulation[1]},"
-              f"\n \t outcome: {possible_manipulation[2]},"
-              f"\n \t manipulated happiness: {possible_manipulation[3]}"
-              f"\n \t true happiness: {possible_manipulation[4]} "
-              f"\n \t overall manipulated happiness: {possible_manipulation[5]}"
-              f"\n \t overall true happiness: {possible_manipulation[6]}")
+        print(f"\t Strategic Voting Option for voter {possible_manipulation[0]+1}: "
+              f"\n \t\t Manipulation: {possible_manipulation[1]},"
+              f"\n \t\t Outcome: {possible_manipulation[2]},"
+              f"\n \t\t Manipulated Happiness: {round(possible_manipulation[3],4)}"
+              f"\n \t\t True Happiness: {round(possible_manipulation[4],4)} "
+              f"\n \t\t Overall Manipulated Happiness: {round(possible_manipulation[5],4)}"
+              f"\n \t\t Overall True Happiness: {round(possible_manipulation[6],4)}  \n")
 
     p = ax[idx[i][0]][idx[i][1]]
     visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
@@ -531,13 +551,13 @@ if __name__ == '__main__':
 
     risk_groups = 100 - (singleGroupCount / voters * 100)
 
-    print("\tAmount of Manipulations: ", len(possible_manipulations))
+    print("\t Amount of Manipulations: ", len(possible_manipulations))
 
     # # risk function
     pmcount = len(possible_manipulations)
     risk_single = (pmcount / (voters * math.factorial(candidates))) * 100
-    print("\tRisk of Single Manipulation: ", risk_single)
-    print("\tRisk of Group Manipulation: ", risk_groups)
+    print(f"\t Risk of Single Manipulation: {round(risk_single,2)}%")
+    print(f"\t Risk of Group Manipulation: {round(risk_groups,2)}%")
     print()
 
     fig.show()
@@ -552,6 +572,6 @@ if __name__ == '__main__':
     #
     # inputfile structure:
     # C,B,C,B,B
-    # A,D,D,D,C
-    # D,C,A,D,C
+    # A,D,D,C,C
+    # D,C,A,D,D
     # B,A,B,A,A
