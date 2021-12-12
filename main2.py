@@ -557,7 +557,7 @@ if __name__ == '__main__':
               f"\n \t\t Overall True Happiness: {round(possible_manipulation[6],4)}  \n")
 
     p = ax[idx[i][0]][idx[i][1]]
-    visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
+    # visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
 
     groups, indices = create_groups_final(votings, 20)
 
