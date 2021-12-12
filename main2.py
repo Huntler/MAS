@@ -154,14 +154,19 @@ def create_voting_situation_from_file(file):
 
 def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     i_index = {val: index for index, val in enumerate(i)}
-    j_index = {val: index for index, val in enumerate(j)}
-    d1 = np.abs([i_index[val] - j_index[val] for val in i])
-    d2 = np.abs([i_index[val] - j_index[val] for val in j])
-    d = d1 + d2
+    if len(j.shape) == 1:
+        j = j[np.newaxis, :]
+    d = []
+    for single_j in j:
+        j_index = {val: index for index, val in enumerate(single_j)}
+        d1 = np.abs([i_index[val] - j_index[val] for val in i])
+        d2 = np.abs([i_index[val] - j_index[val] for val in single_j])
+        d.append(d1 + d2)
+    d = np.array(d)
     m = len(i)
     # TODO s1+s2 doesn't work for small m (m<7)
     s1 = np.power(s, np.power(range(m), 2))
-    h_hat = np.sum(d * (s1 + s1[::-1])) / m
+    h_hat = np.sum(d * (s1 + s1[::-1]),axis=1) / m
     return np.exp(-h_hat)
 
 
