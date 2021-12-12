@@ -410,16 +410,18 @@ def counter_voting(origin_votings, coalition1, coalition2, permutations):
 
 
 def create_groups_final(votings, threshold):
-    copiedvotings = [v for v in votings]
-    helpvotingscopy = [v for v in votings]
+    copiedvotings = votings.copy()  # [v for v in votings]
+    helpvotingscopy = votings.copy()  # [v for v in votings]
     new_groups = []
     indices = []
-    idx = 0
     while len(helpvotingscopy) != 0:
-        start = helpvotingscopy.pop(0)
-        idx += 1
+        start = helpvotingscopy[0]
+        helpvotingscopy = helpvotingscopy[1:]
         indexgroup = []
-        indexgroup.append(idx)
+        for i, v in enumerate(copiedvotings):
+            if (v == start).all():
+                break
+        indexgroup.append(i)
         group = []
         group.append(start)
         new_votings = []
@@ -427,7 +429,10 @@ def create_groups_final(votings, threshold):
             if get_voter_compatibility(voting, start) <= threshold:
                 # del voting, votings
                 group.append(voting)
-                indexgroup.append(idx + i)
+                for i, v in enumerate(copiedvotings):
+                    if (v == voting).all() and i not in indexgroup:
+                        break
+                indexgroup.append(i)
             else:
                 new_votings.append(voting)
         helpvotingscopy = new_votings
@@ -551,7 +556,7 @@ if __name__ == '__main__':
               f"\n \t\t Overall True Happiness: {round(possible_manipulation[6],4)}  \n")
 
     p = ax[idx[i][0]][idx[i][1]]
-    visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
+    # visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
 
     groups, indices = create_groups_final(votings, 20)
 
@@ -575,8 +580,8 @@ if __name__ == '__main__':
     print(f"\t Risk of Group Manipulation: {round(risk_groups,2)}%")
     print()
 
-    fig.show()
-    input("Showing graphs. Waiting... (press ENTER to continue)")
+    # fig.show()
+    # input("Showing graphs. Waiting... (press ENTER to continue)")
     # tactical_votings -> [ coalition1, coalition2, coalition3 ] where coalition [ [ members ], [manipulations] ]
 
     # groups = create_groups_onlybiggest(votings, 20)
