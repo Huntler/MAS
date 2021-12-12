@@ -433,6 +433,16 @@ def visualize_manipulations(manipulations: np.array, voter: int = -1, title="", 
     p.set_xlabel("Permutation")
     p.set_ylabel("Happiness")
 
+def helpme():
+    print("\t Intendet Execution Call: tva.exe [-h] [-i <inputfile path>]   \n\n"
+          "\t Optional Parameters:   \n"
+          "\t\t -h \t display this help \n"
+          "\t\t -i \t start tva with a prepared voting situation    \n\n"
+          "\t Arguments:    \n"
+          "\t\t <inputfile path> \t direct path from .exe location to voting situation file \n\n"
+          "\t Voting Situation File Structure:  \n"
+          "\t\t Columns: Voters \n"
+          "\t\t Rows:    Voter Preference   \n")
 
 if __name__ == '__main__':
     global active_scheme
@@ -444,17 +454,16 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(argv, "hi:")
     except getopt.GetoptError:
-        print('tva.py [-h] [-i <inputfile>]')
+        helpme()
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('tva.py [-h] [-i <inputfile>]')
+            helpme()
             sys.exit()
         elif opt == '-i':
             inputfile = arg
             fileinput = True
-        else:
-            print('tva.py [-h] [-i <inputfile>]')
+            helpme()
             sys.exit()
     if (not os.path.exists(inputfile)) and (inputfile != ''):
         print('The provided inputfile is not valid!')
