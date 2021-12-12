@@ -476,11 +476,11 @@ if __name__ == '__main__':
         scheme_idx = int(input("Select the Voting Scheme: ")) - 1
     except:
         print("Wrong input type given. Exit.")
-        quit()
+        quit(1)
 
     if scheme_idx < 0 or scheme_idx > len(schemes) - 1:
         print(f"The Voting scheme {scheme_idx} does not exist.")
-        quit()
+        quit(1)
 
     #voting sitations
     if not fileinput:
@@ -489,7 +489,7 @@ if __name__ == '__main__':
             candidates = int(input("Insert amount of Candidates: "))
         except:
             print("Wrong input type given. Exit.")
-            quit()
+            quit(1)
         print()
         votings, mapping = create_voting_situation(voters, candidates)
     else:
