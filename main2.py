@@ -149,7 +149,7 @@ def create_voting_situation_from_file(file):
             tmp = l.split(',')
             for i, c in enumerate(tmp):
                 votings[i].append(c.strip())
-    return np.asarray(votings), np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line)-1)])
+    return np.asarray(votings), np.asarray([str(chr(i)) for i in range(65, 65 + len(votings[0]))])
 
 
 def happiness(i: np.array, j: np.array, s: float = 0.9):
