@@ -416,10 +416,13 @@ def create_groups_final(votings, threshold):
     new_groups = []
     indices = []
     while len(helpvotingscopy) != 0:
-        start = helpvotingscopy.pop(0)
-        idx += 1
+        start = helpvotingscopy[0]
+        helpvotingscopy = helpvotingscopy[1:]
         indexgroup = []
-        indexgroup.append(idx)
+        for i, v in enumerate(copiedvotings):
+            if (v == start).all():
+                break
+        indexgroup.append(i)
         group = []
         group.append(start)
         new_votings = []
