@@ -167,7 +167,10 @@ def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     # TODO s1+s2 doesn't work for small m (m<7)
     s1 = np.power(s, np.power(range(m), 2))
     h_hat = np.sum(d * (s1 + s1[::-1]),axis=1) / m
-    return np.exp(-h_hat)
+    ret = np.exp(-h_hat)
+    if len(ret) == 1:
+        return ret[0]
+    return ret
 
 
 def s_voter_manipulation(votings):
@@ -181,13 +184,13 @@ def s_voter_manipulation(votings):
         o_outcome = active_scheme.compute_res(_votings)
         o_happiness = happiness(o_outcome, voting)
         overall_o_happiness = o_happiness / len(_votings)
-        o_happiness = happiness(o_outcome, voting)[0]
+        o_happiness = happiness(o_outcome, voting)
 
         for j, manipulation in enumerate(multiset_permutations(voting)):
             # set the manipulation into the votings array to test it
             _votings[i] = np.asarray(manipulation)
             outcome = active_scheme.compute_res(_votings)
-            h_val = happiness(outcome, voting)[0]
+            h_val = happiness(outcome, voting)
             overall_h_val = h_val / len(_votings)
 
             # if the h_val is higher (better) than before, then store this manipulation
@@ -518,19 +521,19 @@ if __name__ == '__main__':
     possible_manipulations = s_voter_manipulation(votings)
 
     original_winner = get_winners(votings)
-    print("\tNon-strategic voting outcome: ", original_winner)
+    print("\t Non-strategic voting outcome: ", original_winner)
     original_happinesses = happiness(np.array(original_winner), np.array(votings))
-    print("\thppiness level for each voter i: ", original_happinesses)
-    print("\toverall happiness: ", sum(original_happinesses)/len(original_happinesses))
+    print("\t Happiness level for each voter i: ", original_happinesses)
+    print(f"\t Overall Happiness: {round(sum(original_happinesses)/len(original_happinesses),4)} \n")
 
     for possible_manipulation in possible_manipulations:
-        print(f"\tstrategic voting option for voter {possible_manipulation[0]}: "
-              f"\n \t manipulation: {possible_manipulation[1]},"
-              f"\n \t outcome: {possible_manipulation[2]},"
-              f"\n \t manipulated happiness: {possible_manipulation[3]}"
-              f"\n \t true happiness: {possible_manipulation[4]} "
-              f"\n \t overall manipulated happiness: {possible_manipulation[5]}"
-              f"\n \t overall true happiness: {possible_manipulation[6]}")
+        print(f"\t Strategic Voting Option for voter {possible_manipulation[0]+1}: "
+              f"\n \t\t Manipulation: {possible_manipulation[1]},"
+              f"\n \t\t Outcome: {possible_manipulation[2]},"
+              f"\n \t\t Manipulated Happiness: {round(possible_manipulation[3],4)}"
+              f"\n \t\t True Happiness: {round(possible_manipulation[4],4)} "
+              f"\n \t\t Overall Manipulated Happiness: {round(possible_manipulation[5],4)}"
+              f"\n \t\t Overall True Happiness: {round(possible_manipulation[6],4)}  \n")
 
     p = ax[idx[i][0]][idx[i][1]]
     visualize_manipulations(possible_manipulations, title=scheme[1], p=p)
@@ -548,13 +551,13 @@ if __name__ == '__main__':
 
     risk_groups = 100 - (singleGroupCount / voters * 100)
 
-    print("\tAmount of Manipulations: ", len(possible_manipulations))
+    print("\t Amount of Manipulations: ", len(possible_manipulations))
 
     # # risk function
     pmcount = len(possible_manipulations)
     risk_single = (pmcount / (voters * math.factorial(candidates))) * 100
-    print("\tRisk of Single Manipulation: ", risk_single)
-    print("\tRisk of Group Manipulation: ", risk_groups)
+    print(f"\t Risk of Single Manipulation: {round(risk_single,2)}%")
+    print(f"\t Risk of Group Manipulation: {round(risk_groups,2)}%")
     print()
 
     fig.show()
