@@ -152,7 +152,7 @@ def create_voting_situation_from_file(file):
     return votings, np.asarray([str(chr(i)) for i in range(65, 65 + len(first_line))])
 
 
-def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
+def happiness(i: np.array, j: np.array, s: float = 0.9):
     i_index = {val: index for index, val in enumerate(i)}
     j_index = {val: index for index, val in enumerate(j)}
     d1 = np.abs([i_index[val] - j_index[val] for val in i])
