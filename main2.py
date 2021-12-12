@@ -166,7 +166,7 @@ def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
     m = len(i)
     # TODO s1+s2 doesn't work for small m (m<7)
     s1 = np.power(s, np.power(range(m), 2))
-    h_hat = np.sum(d * (s1 + s1[::-1]),axis=1) / m
+    h_hat = np.sum(d * (s1 + s1[::-1] / 2), axis=1) / m
     ret = np.exp(-h_hat)
     if len(ret) == 1:
         return ret[0]
