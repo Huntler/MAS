@@ -138,7 +138,7 @@ def create_voting_situation(n_voters, n_candidates):
 
 def create_voting_situation_from_file(file):
     #open file from path
-    with open('./votingsituation.txt', 'r') as f:
+    with open(file, 'r') as f:
         first_line = f.readline().split(',')
         votings = []
         #fill with first preferences
@@ -442,7 +442,6 @@ if __name__ == '__main__':
     inputfile = ''
     fileinput = False
     try:
-        print("")
         opts, args = getopt.getopt(argv, "hi:")
     except getopt.GetoptError:
         print('tva.py [-h] [-i <inputfile>]')
