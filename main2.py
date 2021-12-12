@@ -581,8 +581,8 @@ if __name__ == '__main__':
     print(f"\t Risk of Group Manipulation: {round(risk_groups,2)}%")
     print()
 
-    fig.show()
-    input("Showing graphs. Waiting... (press ENTER to continue)")
+    # fig.show()
+    # input("Showing graphs. Waiting... (press ENTER to continue)")
     # tactical_votings -> [ coalition1, coalition2, coalition3 ] where coalition [ [ members ], [manipulations] ]
 
     # groups = create_groups_onlybiggest(votings, 20)
