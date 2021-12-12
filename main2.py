@@ -164,13 +164,29 @@ def happiness(i: np.array, j: np.array, s: float = 0.9) -> float:
         d.append(d1 + d2)
     d = np.array(d)
     m = len(i)
-    # TODO s1+s2 doesn't work for small m (m<7)
-    s1 = np.power(s, np.power(range(m), 2))
-    h_hat = np.sum(d * (s1 + s1[::-1] / 2), axis=1) / m
+    h_hat = np.sum(d * get_discounting_factor(m), axis=1) / m
     ret = np.exp(-h_hat)
     if len(ret) == 1:
         return ret[0]
     return ret
+
+
+def get_discounting_factor(n_candidates):
+    x = np.linspace(0, 10, 100)
+    y1 = np.power(0.9, x ** 2)
+    y2 = np.power(0.9, (10 - x) ** 2)
+    y = y1 + y2
+    y_min = y.min()
+    y[50:] -= y_min
+    scaling = 20 / min(n_candidates, 15)
+    y[50:] /= scaling
+    y[50:] += y_min - y.min()
+
+    bins = np.arange(n_candidates) / (n_candidates - 1) * 100
+    bins = bins.astype(int)
+    bins[bins == 100] -= 1
+
+    return y[bins]
 
 
 def s_voter_manipulation(votings):
