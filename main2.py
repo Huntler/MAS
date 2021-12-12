@@ -468,6 +468,7 @@ if __name__ == '__main__':
         elif opt == '-i':
             inputfile = arg
             fileinput = True
+        else:
             helpme()
             sys.exit()
     if (not os.path.exists(inputfile)) and (inputfile != ''):
