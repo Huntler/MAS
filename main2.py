@@ -411,11 +411,10 @@ def counter_voting(origin_votings, coalition1, coalition2, permutations):
 
 
 def create_groups_final(votings, threshold):
-    copiedvotings = [v for v in votings]
-    helpvotingscopy = [v for v in votings]
+    copiedvotings = votings.copy()  # [v for v in votings]
+    helpvotingscopy = votings.copy()  # [v for v in votings]
     new_groups = []
     indices = []
-    idx = 0
     while len(helpvotingscopy) != 0:
         start = helpvotingscopy.pop(0)
         idx += 1
@@ -428,7 +427,10 @@ def create_groups_final(votings, threshold):
             if get_voter_compatibility(voting, start) <= threshold:
                 # del voting, votings
                 group.append(voting)
-                indexgroup.append(idx + i)
+                for i, v in enumerate(copiedvotings):
+                    if (v == voting).all() and i not in indexgroup:
+                        break
+                indexgroup.append(i)
             else:
                 new_votings.append(voting)
         helpvotingscopy = new_votings
