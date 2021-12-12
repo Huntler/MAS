@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # vote for party location, 4 friends, 4 locations
 
-    create_experiment(4, 4, 'vote_for_party_location.txt')
+    create_experiment(3, 3, 'vote_for_party_location.txt')
 
     # 2 friends decide on one out of 20 restaurants
 
