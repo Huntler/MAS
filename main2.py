@@ -554,6 +554,6 @@ if __name__ == '__main__':
     #
     # inputfile structure:
     # C,B,C,B,B
-    # A,D,D,D,C
-    # D,C,A,D,C
+    # A,D,D,C,C
+    # D,C,A,D,D
     # B,A,B,A,A
